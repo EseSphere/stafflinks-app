@@ -126,7 +126,7 @@ body.dark-mode .small-muted {
     cursor: pointer;
     transition: all .2s ease;
     color: #333;
-    background: rgba(255, 255, 255, .72);
+    background: none;
     position: relative
 }
 

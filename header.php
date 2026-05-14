@@ -4,20 +4,24 @@
 <head>
     <meta charset="utf-8">
     <title>StaffLinks | Simplify. Organize. Thrive.</title>
-    <meta name="description" content="StaffLinks is an all-in-one platform to manage staff, clients, schedules, and finances efficiently. Streamline operations and empower your team with a centralized web app." />
-    <meta name="keywords" content="StaffLinks, staff management, client management, scheduling, finance portal, web app, team management, productivity, operations" />
+    <meta name="description"
+        content="StaffLinks is an all-in-one platform to manage staff, clients, schedules, and finances efficiently. Streamline operations and empower your team with a centralized web app." />
+    <meta name="keywords"
+        content="StaffLinks, staff management, client management, scheduling, finance portal, web app, team management, productivity, operations" />
     <meta name="author" content="StaffLinks Team" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="robots" content="index, follow" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta property="og:title" content="StaffLinks | Simplify. Organize. Thrive." />
-    <meta property="og:description" content="Manage staff, clients, schedules, and finances in one unified platform. StaffLinks makes team and operations management simple and efficient." />
+    <meta property="og:description"
+        content="Manage staff, clients, schedules, and finances in one unified platform. StaffLinks makes team and operations management simple and efficient." />
     <meta property="og:image" content="./logo.png" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://www.stafflinks.co.uk" />
     <meta name="twitter:title" content="StaffLinks | Simplify. Organize. Thrive." />
-    <meta name="twitter:description" content="StaffLinks centralizes staff, client, schedule, and finance management in one platform for maximum efficiency." />
+    <meta name="twitter:description"
+        content="StaffLinks centralizes staff, client, schedule, and finance management in one platform for maximum efficiency." />
     <meta name="twitter:image" content="./logo.png" />
     <meta name="twitter:card" content="./logo.png" />
     <meta name="theme-color" content="#4CAF50" />
@@ -53,16 +57,20 @@
             <ul class="list-unstyled">
                 <li><a href="./app.php" class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'home.php') {
                                                             echo 'active';
-                                                        } ?>"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a></li>
+                                                        } ?>"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
+                </li>
                 <li><a href="./visit-logs.php" class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'visit-logs.php') {
                                                                     echo 'active';
-                                                                } ?>"><i class="bi bi-calendar-event me-2"></i> Visits</a></li>
+                                                                } ?>"><i class="bi bi-calendar-event me-2"></i>
+                        Visits</a></li>
                 <li><a href="./timesheet.php" class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'timesheet.php') {
                                                                     echo 'active';
-                                                                } ?>"><i class="bi bi-book me-2"></i> Timesheet</a></li>
+                                                                } ?>"><i class="bi bi-book me-2"></i> Timesheet</a>
+                </li>
                 <li><a href="./calculator.php" class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'timesheet.php') {
                                                                     echo 'active';
-                                                                } ?>"><i class="bi bi-calculator me-2"></i> Calculator</a></li>
+                                                                } ?>"><i class="bi bi-calculator me-2"></i>
+                        Calculator</a></li>
             </ul>
             <hr>
 

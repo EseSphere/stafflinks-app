@@ -77,7 +77,8 @@
             <div class="filter-bar">
                 <div class="row g-2">
                     <div class="col-12 col-md-5">
-                        <input type="text" class="form-control" id="searchVisits" placeholder="Search visits by client name">
+                        <input type="text" class="form-control" id="searchVisits"
+                            placeholder="Search visits by client name">
                     </div>
                     <div class="col-6 col-md-3">
                         <select class="form-select" id="statusFilter">
@@ -196,7 +197,8 @@
         <div class="modal-content rounded-3 shadow-sm">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title" id="secondCarerModalLabel">Second Carer</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
             <div class="modal-body text-center p-4">
                 <p class="fw-bold mb-1">Run Name: <span id="modalRunName" class="text-primary"></span></p>

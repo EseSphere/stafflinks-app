@@ -114,7 +114,7 @@ async function login() {
       }
 
       if (user.user_password === enteredHash) {
-        window.location.href = "app.php";
+        window.location.href = "dashboard.php";
       } else {
         shakeCard();
         clearPin();

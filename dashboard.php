@@ -156,10 +156,13 @@
                     <div class="card-body">
                         <h4 class="fw-bold mb-3">Quick Actions</h4>
                         <div class="row g-3">
-                            <div class="col-6"><button class="btn w-100 py-3 text-start text-white"
-                                    data-action="Timesheet" style="background:var(--accent);border-radius:14px"><i
+                            <div class="col-6">
+                                <button class="btn w-100 py-3 text-start text-white"
+                                    style="background:var(--accent);border-radius:14px"><i
                                         class="bi bi-clock-fill d-block fs-3 mb-2"></i><strong>Timesheet</strong><small
-                                        class="d-block opacity-75">Log hours</small></button></div>
+                                        class="d-block opacity-75">Log hours</small>
+                                </button>
+                            </div>
                             <div class="col-6"><button class="btn w-100 py-3 text-start text-white" data-action="Rota"
                                     style="background:var(--accent2);border-radius:14px"><i
                                         class="bi bi-calendar2-week-fill d-block fs-3 mb-2"></i><strong>Rota</strong><small

@@ -2,9 +2,9 @@
 <footer class="footer">
     <div class="footer-item"><a href="dashboard.php" class="active" aria-label="Home"><i
                 class="bi bi-house-fill"></i></a><span class="footer-label">Home</span></div>
-    <div class="footer-item"><a href="rota.php" aria-label="Rota"><i class="bi bi-calendar2-week-fill"></i></a><span
+    <div class="footer-item"><a href="app.php" aria-label="Rota"><i class="bi bi-calendar2-week-fill"></i></a><span
             class="footer-label">Rota</span></div>
-    <div class="footer-item"><a href="past-shifts.php" aria-label="Past Shift"><i
+    <div class="footer-item"><a href="visit-logs.php" aria-label="Past Shift"><i
                 class="bi bi-clock-history"></i></a><span class="footer-label">Past Shift</span></div>
     <div class="footer-item"><a href="leave.php" aria-label="Leave"><i class="bi bi-umbrella-fill"></i></a><span
             class="footer-label">Leave</span></div>

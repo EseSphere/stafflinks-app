@@ -13,9 +13,9 @@
     </div>
     <ul>
         <li><a class="active" href="dashboard.php"><i class="bi bi-grid-fill"></i> Dashboard</a></li>
-        <li><a href="rota.php"><i class="bi bi-calendar2-week"></i> Rota</a></li>
+        <li><a href="app.php"><i class="bi bi-calendar2-week"></i> Rota</a></li>
         <li><a href="leave.php"><i class="bi bi-umbrella"></i> Leave</a></li>
-        <li><a href="visits.php"><i class="bi bi-clock-history"></i> Visits</a></li>
+        <li><a href="visit-logs.php"><i class="bi bi-clock-history"></i> Visits</a></li>
         <li><a href="timesheet.php"><i class="bi bi-clock"></i> Timesheet</a></li>
         <li><a href="calculator.php"><i class="bi bi-calculator"></i> Pay Estimator</a></li>
         <li><a href="service-users.php"><i class="bi bi-people"></i> Service Users</a></li>
