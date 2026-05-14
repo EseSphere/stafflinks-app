@@ -1,0 +1,60 @@
+/* Footer and Side Navigation Styles */
+
+#sideNav {
+    position: fixed;
+    left: -250px;
+    top: 0;
+    width: 250px;
+    height: 100%;
+    background: #fff;
+    z-index: 100;
+    transition: 0.3s;
+    overflow-y: auto;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+#sideNav.active {
+    left: 0;
+}
+
+#overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+}
+
+#overlay.active {
+    display: block;
+}
+
+.footer a,
+.footer button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    transition: background 0.3s;
+}
+
+#sideNav ul li a {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    border-radius: 8px;
+    transition: background 0.3s, color 0.3s;
+    color: #000;
+    text-decoration: none;
+}
+
+#sideNav ul li a:hover {
+    background: #E3C5B2;
+    color: #fff;
+}
+
+#sideNav ul li a i {
+    margin-right: 8px;
+}

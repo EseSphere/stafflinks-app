@@ -1,0 +1,32 @@
+Features
+
+-- Users can't login past calls
+-- Can not login calls ahead(another day call)
+-- Prevent carers from logging in call for lunch when the hour difference is 3 hours(Send warning alarm)
+-- User must finish the current or in-progress call first before moving unto the next
+-- After the call date, users won't be able to go back to previous care call tasks and medications
+
+
+
+Pages status
+-- index ✅
+-- Log ✅
+-- Signup ✅
+-- Create pin ✅
+-- Login ✅
+-- Home ✅
+
+
+
+Update and changes to make
+Modify the ongoing care call. It should be for the current day and not the previous day 
+affecting it and also update the xampp data
+Activities Update
+Sync finish task and meds
+
+
+
+_______________________________________________________________________
+_______________________________________________________________________
+
+Dashboard - fetch data from schedule visits, cancel call and client status table
