@@ -157,24 +157,33 @@
                         <h4 class="fw-bold mb-3">Quick Actions</h4>
                         <div class="row g-3">
                             <div class="col-6">
-                                <button class="btn w-100 py-3 text-start text-white"
+                                <a type="button" href="timesheet.php" class="btn w-100 py-3 text-start text-white"
                                     style="background:var(--accent);border-radius:14px"><i
                                         class="bi bi-clock-fill d-block fs-3 mb-2"></i><strong>Timesheet</strong><small
                                         class="d-block opacity-75">Log hours</small>
-                                </button>
+                                </a>
                             </div>
-                            <div class="col-6"><button class="btn w-100 py-3 text-start text-white" data-action="Rota"
+                            <div class="col-6">
+                                <a type="button" href="rota.php" class="btn w-100 py-3 text-start text-white"
                                     style="background:var(--accent2);border-radius:14px"><i
                                         class="bi bi-calendar2-week-fill d-block fs-3 mb-2"></i><strong>Rota</strong><small
-                                        class="d-block opacity-75">View shifts</small></button></div>
-                            <div class="col-6"><button class="btn w-100 py-3 text-start text-dark" data-action="Leave"
+                                        class="d-block opacity-75">View shifts</small>
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a type="button" href="leave.php" class="btn w-100 py-3 text-start text-dark"
                                     style="background:var(--warning);border-radius:14px"><i
                                         class="bi bi-umbrella-fill d-block fs-3 mb-2"></i><strong>Leave</strong><small
-                                        class="d-block opacity-75">Request time off</small></button></div>
-                            <div class="col-6"><button class="btn w-100 py-3 text-start text-white"
-                                    data-action="Calculator" style="background:#4A90E2;border-radius:14px"><i
+                                        class="d-block opacity-75">Request time off</small>
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a type="button" href="calculator.php" class="btn w-100 py-3 text-start text-white"
+                                    style="background:#4A90E2;border-radius:14px"><i
                                         class="bi bi-calculator-fill d-block fs-3 mb-2"></i><strong>Calculator</strong><small
-                                        class="d-block opacity-75">Tax estimate</small></button></div>
+                                        class="d-block opacity-75">Tax estimate</small>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>

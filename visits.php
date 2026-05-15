@@ -1,246 +1,220 @@
-<?php include_once 'header.php'; ?>
+<?php include_once 'header1.php'; ?>
 
-<div class="main-wrapper container mt-3">
-    <!-- Client Profile Horizontal Layout -->
-    <?php require_once 'client-profile-extension.php'; ?>
+<div id="overlay" aria-hidden="true"></div>
 
-    <!-- Search & Filter Bar -->
-    <div class="row search-filter-row">
-        <div class="col-md-6">
-            <input type="text" id="clientSearch" class="form-control fs-5" placeholder="Search by carer">
-        </div>
-        <div class="col-md-3">
-            <select id="statusFilter" class="form-select fs-5">
-                <option value="">All Status</option>
-                <option value="Scheduled">Scheduled</option>
-                <option value="In-progress">In-progress</option>
-                <option value="Completed">Completed</option>
-            </select>
+<!-- Side Navigation -->
+<aside id="sideNav" aria-label="Side navigation">
+    <div class="user-info">
+        <img src="https://via.placeholder.com/100x100.png?text=SL" alt="User profile">
+        <p class="name mb-0">StaffLinks User</p>
+        <div class="email">stafflinks@example.com</div>
+        <div class="phone">Care Team</div>
+    </div>
+
+    <h5>Menu</h5>
+    <ul>
+        <li><a href="./home"><i class="bi bi-house-door me-2"></i>Dashboard</a></li>
+        <li><a href="./visit-logs"><i class="bi bi-journal-text me-2"></i>Visit Logs</a></li>
+        <li><a href="./settings"><i class="bi bi-gear me-2"></i>Settings</a></li>
+        <li><a href="./profile"><i class="bi bi-person me-2"></i>Profile</a></li>
+    </ul>
+
+    <button type="button" class="btn btn-outline-danger logout-btn">
+        <i class="bi bi-box-arrow-right me-2"></i>Logout
+    </button>
+</aside>
+
+<div class="topbar mb-3 p-2">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+        <button class="menu-btn fs-1" id="menuBtn" aria-label="Open menu">
+            <i class="bi bi-list"></i>
+        </button>
+
+        <h4 class="mb-0 fw-bold">StaffLinks</h4>
+
+        <div class="d-flex align-items-center gap-2">
+            <div class="chip"><span id="today-clock">--:--</span></div>
+            <button class="btn btn-sm btn-light" id="refreshBtn" title="Refresh">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button class="btn btn-sm btn-light" id="todayBtn" title="Today">
+                <i class="bi bi-calendar-check"></i>
+            </button>
+            <button class="btn btn-sm btn-light" id="themeBtn" title="Toggle theme">
+                <i class="bi bi-moon-stars"></i>
+            </button>
         </div>
     </div>
 
-    <!-- Visits List -->
-    <h5>Visit History</h5>
-    <div class="row g-3 fs-5" id="visitsContainer"></div>
+    <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-light" id="prevDay" aria-label="Previous day">‹</button>
+            <button class="btn btn-sm btn-light" id="nextDay" aria-label="Next day">›</button>
+        </div>
 
-    <hr>
-    <!-- Client Highlights -->
-    <?php require_once 'highlight-extention.php'; ?>
+        <div class="date-strip w-100" id="dateStrip" aria-label="Pick a date"></div>
+
+        <div class="text-end">
+            <div class="small-muted">Hours</div>
+            <div class="hour-total" id="totalHours">0h 0m</div>
+        </div>
+    </div>
+
+    <div class="mt-2 mb-2">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="small-light">Completion Progress</div>
+            <div class="small-muted" id="progressText">0%</div>
+        </div>
+        <div class="progress" style="height:8px;">
+            <div class="progress-bar" role="progressbar" id="progressBar" style="width:0%;"></div>
+        </div>
+    </div>
 </div>
 
-<script>
-    const dbName = "stafflinks";
-    const clientStoreName = "tbl_general_client_form";
-    const visitsStoreName = "tbl_daily_shift_records";
-
-    const careCallColors = {
-        'Morning': 'warning',
-        'Lunch': 'danger',
-        'Tea': 'tea',
-        'Bed': 'dark'
-    };
-
-    // --- Utility Functions ---
-    const getClientIdFromUrl = () => {
-        return new URLSearchParams(window.location.search).get('uryyToeSS4');
-    };
-
-    const openDB = (storeName) => {
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open(dbName);
-            request.onerror = e => reject(e);
-            request.onsuccess = e => {
-                const db = e.target.result;
-                if (!db.objectStoreNames.contains(storeName)) {
-                    reject(new Error(`Object store "${storeName}" not found`));
-                } else {
-                    resolve(db);
-                }
-            };
-        });
-    };
-
-    const calculateAge = dobStr => {
-        if (!dobStr) return '--';
-        const dob = new Date(dobStr);
-        const diff = Date.now() - dob.getTime();
-        return Math.abs(new Date(diff).getUTCFullYear() - 1970);
-    };
-
-    // --- Display Functions ---
-    const displayClientInfo = client => {
-        document.getElementById('clientName').textContent = `${client.client_first_name} ${client.client_last_name}`;
-        document.getElementById('clientAge').textContent = `Age: ${calculateAge(client.client_date_of_birth)}`;
-
-        const initialsEl = document.getElementById('clientInitials');
-        const initials = (client.client_first_name[0] || '-') + (client.client_last_name[0] || '-');
-        initialsEl.textContent = initials.toUpperCase();
-        initialsEl.style.backgroundColor = '#0d6efd';
-
-        // Preserve paragraphs and line breaks
-        const highlightEl = document.getElementById('highlight');
-        if (client.client_highlights) {
-            const formattedText = client.client_highlights
-                .split(/\n\s*\n/) // split into paragraphs
-                .map(para => `<p>${para.replace(/\n/g, '<br>')}</p>`) // single line breaks
-                .join('');
-            highlightEl.innerHTML = formattedText;
-        } else {
-            highlightEl.textContent = 'No highlights';
-        }
-    };
-
-    const renderVisits = visits => {
-        const container = document.getElementById('visitsContainer');
-        container.innerHTML = '';
-
-        visits.forEach((v, index) => {
-            const carers = v.carer_Name ? v.carer_Name.split(',') : [];
-            const carerAvatars = carers.map(c => `
-            <span class="d-inline-flex align-items-center me-2 mb-1">
-                <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(c)}&background=random" alt="${c}" class="carers-avatar2">
-                <span class="carer-name">${c}</span>
-            </span>
-        `).join('');
-
-            container.innerHTML += `
-            <div class="col-md-6 col-lg-4 fs-5">
-                <div class="card p-3 visit-card card-hover h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="badge bg-${careCallColors[v.col_care_call] || 'info'}">${v.col_care_call}</span>
-                        <small class="text-muted">${new Date(v.shift_date).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })}</small>
+<div class="container py-3">
+    <div class="row g-3 mb-3">
+        <div class="col-12">
+            <div class="filter-bar">
+                <div class="row g-2">
+                    <div class="col-12 col-md-5">
+                        <input type="text" class="form-control" id="searchVisits"
+                            placeholder="Search visits by client name">
                     </div>
-                    <div class="mb-2">
-                        <i class="bi bi-clock me-1"></i>
-                        <strong>In:</strong> ${v.planned_timeIn || '-'}
-                        <strong class="ms-2">Out:</strong> ${v.planned_timeOut || '-'}
+                    <div class="col-6 col-md-3">
+                        <select class="form-select" id="statusFilter">
+                            <option value="all">All statuses</option>
+                            <option value="scheduled">Scheduled</option>
+                            <option value="in-progress">In progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
                     </div>
-                    <div class="mb-2">
-                        <strong>Carers:</strong>
-                        <div class="d-flex flex-wrap align-items-center mt-1 fs-5">
-                            ${carerAvatars}
-                        </div>
+                    <div class="col-6 col-md-2">
+                        <select class="form-select" id="sortVisits">
+                            <option value="time-asc">Time ↑</option>
+                            <option value="time-desc">Time ↓</option>
+                            <option value="name-asc">Name A-Z</option>
+                            <option value="name-desc">Name Z-A</option>
+                        </select>
                     </div>
-                    <div class="mb-2">
-                        <div class="d-flex justify-content-between align-items-center fs-5">
-                            <strong>Note</strong>
-                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#noteCollapse${index}" aria-expanded="false" aria-controls="noteCollapse${index}">
-                                <i class="bi bi-chevron-down rotate-icon collapsed"></i>
-                            </button>
-                        </div>
-                        <div class="collapse mt-2 fs-5" id="noteCollapse${index}">
-                            <div class="border rounded p-2">${v.note || ''}</div>
-                        </div>
+                    <div class="col-12 col-md-2 d-grid">
+                        <button class="btn btn-outline-secondary" id="clearFilters">
+                            <i class="bi bi-x-circle me-1"></i>Clear
+                        </button>
                     </div>
                 </div>
             </div>
-        `;
-        });
+        </div>
 
-        attachCollapseRotate();
-        attachSearchFilter();
-    };
+        <div class="col-12 col-lg-8">
+            <div class="card p-3 visits-list" id="visitsContainer"></div>
+        </div>
 
-    const attachCollapseRotate = () => {
-        document.querySelectorAll('.collapse').forEach(c => {
-            c.addEventListener('show.bs.collapse', () => {
-                const icon = c.previousElementSibling.querySelector('.rotate-icon');
-                if (icon) icon.classList.remove('collapsed');
-            });
-            c.addEventListener('hide.bs.collapse', () => {
-                const icon = c.previousElementSibling.querySelector('.rotate-icon');
-                if (icon) icon.classList.add('collapsed');
-            });
-        });
-    };
+        <div class="col-12 col-lg-4">
+            <div class="stats-grid fade-in-up mb-3">
+                <div class="stat-card">
+                    <div class="small-muted">Care Calls</div>
+                    <div class="stat-value" id="countCalls">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="small-muted">Completed</div>
+                    <div class="stat-value" id="completedCalls">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="small-muted">Pending</div>
+                    <div class="stat-value" id="pendingCalls">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="small-muted">Status</div>
+                    <div class="mt-1">
+                        <span id="connStatus" class="badge bg-success">Online</span>
+                        <span id="offlineStatus" style="display:none;" class="badge bg-danger">Offline</span>
+                    </div>
+                </div>
+            </div>
 
-    const attachSearchFilter = () => {
-        const searchInput = document.getElementById('clientSearch');
-        const statusSelect = document.getElementById('statusFilter');
-        const visitCards = document.querySelectorAll('.visit-card');
+            <div class="card p-3 mb-3 next-visit-card">
+                <h6 class="mb-2">Next Visit</h6>
+                <div id="nextVisitCard" class="small-muted">No upcoming visit for this date.</div>
+            </div>
 
-        const filterVisits = () => {
-            const searchText = searchInput.value.toLowerCase();
-            const selectedStatus = statusSelect.value.toLowerCase();
+            <div class="card p-3 mb-3">
+                <h6>Run Details</h6>
+                <ul class="list-unstyled small-muted mb-0">
+                    <li>Run name: <strong id="runName">N/A</strong></li>
+                    <li>Selected date: <strong id="selectedDateLabel">-</strong></li>
+                    <li>Last refresh: <strong id="lastRefreshTime">-</strong></li>
+                </ul>
+            </div>
 
-            visitCards.forEach(card => {
-                const call = card.querySelector('.badge').textContent.toLowerCase();
-                const carers = Array.from(card.querySelectorAll('.carer-name')).map(el => el.textContent.toLowerCase()).join(' ');
+            <div class="card p-3">
+                <h6>Alerts</h6>
+                <div id="alertsContainer" class="alerts-container small-muted"></div>
+            </div>
+        </div>
+    </div>
+</div>
 
-                const matchesSearch = carers.includes(searchText) || call.includes(searchText);
-                const matchesStatus = !selectedStatus || call === selectedStatus;
+<template id="visitTpl">
+    <div class="card mb-3 visit-item fade-in-up" tabindex="0">
+        <div class="card-body p-3">
+            <div class="visit-row">
+                <div class="avatar"><img src="" alt="user"></div>
 
-                card.parentElement.style.display = (matchesSearch && matchesStatus) ? 'block' : 'none';
-            });
-        };
+                <div class="visit-details">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div class="flex-grow-1">
+                            <div class="h6 mb-0 name text-truncate"></div>
+                            <div class="small-muted service"></div>
+                            <div class="visit-meta">
+                                <span class="meta-pill visit-date"></span>
+                                <span class="meta-pill visit-duration"></span>
+                            </div>
+                        </div>
+                        <div class="text-end carers-icons"></div>
+                    </div>
 
-        searchInput.addEventListener('input', filterVisits);
-        statusSelect.addEventListener('change', filterVisits);
-    };
+                    <div class="mt-2 d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                        <div class="small-muted times">09:00 - 10:00</div>
+                        <div><span class="badge badge-status status">Scheduled</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
 
-    // --- Data Fetching ---
-    const fetchClient = async clientId => {
-        try {
-            const db = await openDB(clientStoreName);
-            const tx = db.transaction(clientStoreName, 'readonly');
-            const store = tx.objectStore(clientStoreName);
-            const request = store.openCursor();
+<div class="footer">
+    <button onclick="history.back()" title="Back" id="btn-back"><i class="bi bi-arrow-left"></i></button>
+    <a href="./home" title="Home"><i class="bi bi-house"></i></a>
+    <a href="./visit-logs" title="Log"><i class="bi bi-journal-text"></i></a>
+    <a href="./settings" title="User"><i class="bi bi-person"></i></a>
+</div>
 
-            let found = false;
-            request.onsuccess = e => {
-                const cursor = e.target.result;
-                if (cursor) {
-                    if (cursor.value.uryyToeSS4 === clientId) {
-                        displayClientInfo(cursor.value);
-                        found = true;
-                    } else cursor.continue();
-                } else if (!found) {
-                    document.getElementById('clientName').textContent = "Client not found";
-                    document.getElementById('clientAge').textContent = "Age: --";
-                    document.getElementById('highlight').textContent = "N/A";
-                }
-            };
-            request.onerror = e => console.error("Failed to fetch client:", e);
-        } catch (err) {
-            console.error("Database error:", err);
-        }
-    };
+<!-- Second Carer Modal -->
+<div class="modal fade" id="secondCarerModal" tabindex="-1" aria-labelledby="secondCarerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-3 shadow-sm">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="secondCarerModalLabel">Second Carer</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <p class="fw-bold mb-1">Run Name: <span id="modalRunName" class="text-primary"></span></p>
+                <p class="mb-0">Second Carer: <span id="modalCarerName" class="fw-semibold"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-    const fetchVisits = async clientId => {
-        try {
-            const db = await openDB(visitsStoreName);
-            const tx = db.transaction(visitsStoreName, 'readonly');
-            const store = tx.objectStore(visitsStoreName);
-            const request = store.getAll();
-
-            request.onsuccess = () => {
-                const clientVisits = request.result
-                    .filter(v => v.uryyToeSS4 === clientId)
-                    .sort((a, b) => new Date(b.shift_date + " " + b.planned_timeIn) - new Date(a.shift_date + " " + a.planned_timeIn));
-                renderVisits(clientVisits);
-            };
-            request.onerror = e => console.error("Failed to fetch visits:", e);
-        } catch (err) {
-            console.error("Database error:", err);
-        }
-    };
-
-    // --- Update Action Links ---
-    const updateActionLinks = clientId => {
-        if (!clientId) return;
-        document.getElementById('dnacprBtn').href = `health.php?uryyToeSS4=${encodeURIComponent(clientId)}`;
-        document.getElementById('allergiesBtn').href = `emergency.php?uryyToeSS4=${encodeURIComponent(clientId)}`;
-    };
-
-    // --- Initialization ---
-    const clientId = getClientIdFromUrl();
-    if (clientId) {
-        fetchClient(clientId);
-        fetchVisits(clientId);
-        updateActionLinks(clientId);
-    } else {
-        console.error("No client ID found in URL");
-    }
-</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script src="./js/jquery-3.7.0.min.js"></script>
+<script src="./js/app.js?v=<?php echo time(); ?>"></script>
+<script src="./js/sync_visits.js?v=<?php echo time(); ?>"></script>
 
 <?php include_once 'footer.php'; ?>
