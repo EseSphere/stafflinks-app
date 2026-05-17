@@ -1,5 +1,5 @@
 <div class="footer">
-    <a href="./app" title="Home"><i class="bi bi-house"></i></a>
+    <a href="./dashboard" title="Home"><i class="bi bi-house"></i></a>
     <a href="./visit-logs" title="Log"><i class="bi bi-journal-text"></i></a>
     <a href="./timesheet" title="User"><i class="bi bi-list"></i></a>
     <a href="./calculator" title="User"><i class="bi bi-calculator"></i></a>

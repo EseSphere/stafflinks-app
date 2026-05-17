@@ -13,7 +13,7 @@
     </div>
     <ul>
         <li><a class="active" href="dashboard.php"><i class="bi bi-grid-fill"></i> Dashboard</a></li>
-        <li><a href="app.php"><i class="bi bi-calendar2-week"></i> Rota</a></li>
+        <li><a href="rota.php"><i class="bi bi-calendar2-week"></i> Rota</a></li>
         <li><a href="leave.php"><i class="bi bi-umbrella"></i> Leave</a></li>
         <li><a href="visit-logs.php"><i class="bi bi-clock-history"></i> Visits</a></li>
         <li><a href="timesheet.php"><i class="bi bi-clock"></i> Timesheet</a></li>
@@ -22,6 +22,6 @@
         <li><a href="messages.php"><i class="bi bi-envelope"></i> Messages</a></li>
         <li><a href="documents.php"><i class="bi bi-file-earmark-text"></i> Documents</a></li>
         <li><a href="settings.php"><i class="bi bi-gear"></i> Settings</a></li>
-    </ul><button class="btn btn-danger logout-btn"><i class="bi bi-box-arrow-left me-2"></i> Log out</button>
+    </ul><a href="logout.php" class="btn btn-danger logout-btn"><i class="bi bi-box-arrow-left me-2"></i> Log out</a>
 </nav>
 <div id="overlay"></div>

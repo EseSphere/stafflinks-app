@@ -431,7 +431,7 @@
                 </div>
 
                 <div class="shift-slot">
-                    <article class="shift-card clickable-shift" onclick="window.location.href='app.php'">
+                    <article class="shift-card clickable-shift" onclick="window.location.href='visits.php'">
                         <i class="bi bi-check2-all shift-check"></i>
                         <div class="shift-content">
                             <div class="shift-time">20:00 - 08:00</div>
@@ -448,7 +448,7 @@
                 </div>
 
                 <div class="shift-slot">
-                    <article class="shift-card clickable-shift" onclick="window.location.href='app.php'">
+                    <article class="shift-card clickable-shift" onclick="window.location.href='visits.php'">
                         <i class="bi bi-check2-all shift-check"></i>
                         <div class="shift-content">
                             <div class="shift-time">20:00 - 08:00</div>
