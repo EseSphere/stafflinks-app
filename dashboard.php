@@ -11,7 +11,7 @@
     <link href="./css/style1.css" rel="stylesheet">
 </head>
 
-<body><?php include 'new-navbar.php'; ?>
+<body><?php include 'navbar.php'; ?>
     <header class="topbar">
         <div class="container-fluid px-3">
             <div class="d-flex align-items-center justify-content-between gap-3">
@@ -222,4 +222,5 @@
             </div>
         </section>
     </main>
+
     <?php include 'new-footer.php'; ?>

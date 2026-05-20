@@ -1,91 +1,136 @@
-<script>
-    (function() {
-        const dbName = "stafflinks";
-        const storeName = "tbl_team_account";
+<?php require_once('header-log.php'); ?>
+<style>
+    .btn-pop {
+        transform: scale(1.2);
+        transition: transform 0.15s ease;
+    }
 
-        console.log(`Opening IndexedDB: ${dbName}`);
+    @keyframes shake {
+        0% {
+            transform: translateX(0);
+        }
 
-        // Open the DB without specifying version → avoids VersionError
-        const request = indexedDB.open(dbName);
+        20% {
+            transform: translateX(-10px);
+        }
 
-        request.onupgradeneeded = function(event) {
-            const db = event.target.result;
-            console.log("onupgradeneeded triggered");
+        40% {
+            transform: translateX(10px);
+        }
 
-            if (!db.objectStoreNames.contains(storeName)) {
-                console.log(`Creating object store: ${storeName}`);
-                db.createObjectStore(storeName, {
-                    keyPath: "id"
-                });
-            } else {
-                console.log(`Object store already exists: ${storeName}`);
-            }
-        };
+        60% {
+            transform: translateX(-10px);
+        }
 
-        request.onsuccess = function(event) {
-            const db = event.target.result;
-            console.log("IndexedDB opened successfully");
+        80% {
+            transform: translateX(10px);
+        }
 
-            if (!db.objectStoreNames.contains(storeName)) {
-                console.warn("Object store not found. Redirecting to signup");
-                window.location.href = "./signup";
-                return;
-            }
+        100% {
+            transform: translateX(0);
+        }
+    }
 
-            const transaction = db.transaction(storeName, "readonly");
-            const store = transaction.objectStore(storeName);
-            const cursorRequest = store.openCursor();
+    .shake {
+        animation: shake 0.4s;
+    }
 
-            let hasAnyRow = false;
-            let firstUserEmail = "";
+    .create-account-box {
+        margin-top: 2rem;
+        padding: 1.25rem;
+        border-radius: 18px;
+        background: rgba(0, 0, 0, 0.03);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
 
-            console.log(`Checking records in ${storeName}...`);
+    .create-account-text {
+        color: #6c757d;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
 
-            cursorRequest.onsuccess = function(event) {
-                const cursor = event.target.result;
+    .create-account-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.65rem 1.2rem;
+        border-radius: 999px;
+        background: #111;
+        color: #fff;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 700;
+        transition: all 0.2s ease;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+    }
 
-                if (cursor) {
-                    hasAnyRow = true;
-                    const user = cursor.value;
-                    const email = user.user_email_address || "N/A";
-                    const status = (user.status2 || "").toString().trim().toLowerCase();
+    .create-account-btn:hover {
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+    }
 
-                    console.log(`Found record: id=${user.id}, email=${email}, status2=${status}`);
+    @media (max-width: 576px) {
+        .create-account-box {
+            padding: 1rem;
+        }
 
-                    // Save first user's email for fallback
-                    if (!firstUserEmail && user.user_email_address) {
-                        firstUserEmail = encodeURIComponent(user.user_email_address);
-                    }
+        .create-account-btn {
+            width: 100%;
+        }
+    }
+</style>
 
-                    // Check if Active
-                    if (status === "active") {
-                        console.log(`✅ Active user found (${email}). Redirecting to login.php`);
-                        window.location.href = "./login";
-                        return; // Stop checking further
-                    }
+<div class="mt-5" data-aos="zoom-in" data-aos-duration="1000" style="z-index:1;">
+    <div style="border: none; height:100vh;" class="card text-center" id="pinCard">
+        <h3 class="mb-3 fw-bold">Signin</h3>
 
-                    cursor.continue();
-                } else {
-                    // Cursor finished scanning
-                    if (!hasAnyRow) {
-                        console.warn("❌ No records found. Redirecting to signup.php");
-                        window.location.href = "./signup";
-                    } else {
-                        console.log(`ℹ️ Records exist but none Active. Redirecting to create-pin.php?email=${firstUserEmail}`);
-                        window.location.href = `create-pin?email=${firstUserEmail}`;
-                    }
-                }
-            };
+        <div class="container">
+            <input
+                style="background-color:inherit !important; color:#000 !important; font-size:3rem; letter-spacing:0.5rem; text-align:center; font-weight:bold;"
+                placeholder="••••"
+                type="text" maxlength="4" id="pin"
+                class="pin-input form-control-plaintext mb-4" readonly>
 
-            cursorRequest.onerror = function(event) {
-                console.error("Error reading IndexedDB data:", event.target.error);
-                window.location.href = "./signup";
-            };
-        };
+            <div class="keypad d-grid gap-2 mt-3" id="keypad">
+                <div class="row">
+                    <div class="col-4"><button class="btn btn-light" data-num="1">1</button></div>
+                    <div class="col-4"><button class="btn btn-light" data-num="2">2</button></div>
+                    <div class="col-4"><button class="btn btn-light" data-num="3">3</button></div>
+                </div>
+                <div class="row">
+                    <div class="col-4"><button class="btn btn-light" data-num="4">4</button></div>
+                    <div class="col-4"><button class="btn btn-light" data-num="5">5</button></div>
+                    <div class="col-4"><button class="btn btn-light" data-num="6">6</button></div>
+                </div>
+                <div class="row">
+                    <div class="col-4"><button class="btn btn-light" data-num="7">7</button></div>
+                    <div class="col-4"><button class="btn btn-light" data-num="8">8</button></div>
+                    <div class="col-4"><button class="btn btn-light" data-num="9">9</button></div>
+                </div>
+                <div class="row">
+                    <div class="col-4"><button class="btn btn-clear" id="clearPin">C</button></div>
+                    <div class="col-4"><button class="btn btn-light" data-num="0">0</button></div>
+                    <div class="col-4"><button class="btn btn-login" id="loginBtn"><i class="bi bi-box-arrow-in-right"></i></button></div>
+                </div>
+            </div>
 
-        request.onerror = function(event) {
-            console.error("Error opening IndexedDB:", event.target.error);
-            window.location.href = "./signup";
-        };
-    })();
-</script>
+            <div class="create-account-box">
+                <span class="create-account-text">Don’t have an account?</span>
+                <a href="./signup" class="create-account-btn">
+                    Create Account
+                    <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="./js/login.js?v=<?php echo time(); ?>"></script>
+
+<?php require_once('footer-log.php'); ?>

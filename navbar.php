@@ -22,6 +22,6 @@
         <li><a href="messages.php"><i class="bi bi-envelope"></i> Messages</a></li>
         <li><a href="documents.php"><i class="bi bi-file-earmark-text"></i> Documents</a></li>
         <li><a href="settings.php"><i class="bi bi-gear"></i> Settings</a></li>
-    </ul><a href="logout.php" class="btn btn-danger logout-btn"><i class="bi bi-box-arrow-left me-2"></i> Log out</a>
+    </ul><a href="./" class="btn btn-danger logout-btn"><i class="bi bi-box-arrow-left me-2"></i> Log out</a>
 </nav>
 <div id="overlay"></div>

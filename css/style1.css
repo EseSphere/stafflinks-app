@@ -402,6 +402,8 @@ body.dark-mode .small-muted {
     background: linear-gradient(90deg, rgba(255, 255, 255, .75), rgba(255, 255, 255, 1))
 }
 
+/* Navbar code start's here */
+
 #sideNav {
     position: fixed;
     left: -290px;
@@ -501,6 +503,8 @@ body.dark-mode .small-muted {
 #overlay.show {
     display: block
 }
+
+/* Navbar code end's here */
 
 .footer {
     position: fixed;

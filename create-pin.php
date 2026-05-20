@@ -5,6 +5,55 @@
         transform: scale(1.2);
         transition: transform 0.15s ease;
     }
+    .create-account-box {
+        margin-top: 1rem;
+        padding: 1.25rem;
+        border-radius: 18px;
+        background: rgba(0, 0, 0, 0.03);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .create-account-text {
+        color: #6c757d;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    .create-account-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.65rem 1.2rem;
+        border-radius: 999px;
+        background: #111;
+        color: #fff;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 700;
+        transition: all 0.2s ease;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+    }
+
+    .create-account-btn:hover {
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    @media (max-width: 576px) {
+        .create-account-box {
+            padding: 1rem;
+        }
+
+        .create-account-btn {
+            width: 100%;
+        }
+    }
 </style>
 
 <div class="mt-4" data-aos="zoom-in" data-aos-duration="1000" style="z-index:1;">
@@ -38,6 +87,14 @@
                 <div class="col-4"><button class="btn btn-login" id="savePin"><i class="bi bi-box-arrow-in-right"></i></button></div>
             </div>
         </div>
+
+        <div class="create-account-box">
+                <span class="create-account-text">Already have an account?</span>
+                <a href="./" class="create-account-btn">
+                    Login
+                    <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
     </div>
 </div>
 

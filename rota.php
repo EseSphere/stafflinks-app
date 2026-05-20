@@ -305,7 +305,7 @@
 </head>
 
 <body>
-    <?php include 'new-navbar.php'; ?>
+    <?php include 'navbar.php'; ?>
 
     <header class="topbar">
         <div class="container-fluid px-3">

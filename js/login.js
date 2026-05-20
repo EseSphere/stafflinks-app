@@ -3,7 +3,11 @@ const keypad = document.getElementById("keypad");
 const clearBtn = document.getElementById("clearPin");
 const loginBtn = document.getElementById("loginBtn");
 const pinCard = document.getElementById("pinCard");
+
 let actualPin = "";
+
+const dbName = "stafflinks";
+const storeName = "tbl_team_account";
 
 function fastClickHandler(el, callback) {
   el.addEventListener(
@@ -13,10 +17,9 @@ function fastClickHandler(el, callback) {
       animateButton(el);
       requestAnimationFrame(callback);
     },
-    {
-      passive: false,
-    }
+    { passive: false }
   );
+
   el.addEventListener("mousedown", (e) => {
     e.preventDefault();
     animateButton(el);
@@ -40,10 +43,12 @@ function pressNum(num) {
   if (actualPin.length < 4) {
     actualPin += num;
     pinInput.value = "•".repeat(actualPin.length - 1) + num;
+
     setTimeout(() => {
       pinInput.value = "•".repeat(actualPin.length);
     }, 300);
   }
+
   if (actualPin.length === 4) {
     setTimeout(() => login(), 200);
   }
@@ -59,6 +64,7 @@ async function hashPin(pin) {
   const data = encoder.encode(pin);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
+
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
@@ -67,41 +73,82 @@ function shakeCard() {
   setTimeout(() => pinCard.classList.remove("shake"), 400);
 }
 
+function openDatabase() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(dbName);
+
+    request.onupgradeneeded = function (event) {
+      const db = event.target.result;
+
+      if (!db.objectStoreNames.contains(storeName)) {
+        db.createObjectStore(storeName, {
+          keyPath: "id",
+        });
+      }
+    };
+
+    request.onsuccess = function (event) {
+      const db = event.target.result;
+
+      if (db.objectStoreNames.contains(storeName)) {
+        resolve(db);
+        return;
+      }
+
+      const newVersion = db.version + 1;
+      db.close();
+
+      const upgradeRequest = indexedDB.open(dbName, newVersion);
+
+      upgradeRequest.onupgradeneeded = function (event) {
+        const upgradedDb = event.target.result;
+
+        if (!upgradedDb.objectStoreNames.contains(storeName)) {
+          upgradedDb.createObjectStore(storeName, {
+            keyPath: "id",
+          });
+        }
+      };
+
+      upgradeRequest.onsuccess = function (event) {
+        resolve(event.target.result);
+      };
+
+      upgradeRequest.onerror = function (event) {
+        reject(event.target.error);
+      };
+    };
+
+    request.onerror = function (event) {
+      reject(event.target.error);
+    };
+  });
+}
+
 async function login() {
   if (actualPin.length !== 4) {
     alert("Please enter a 4-digit PIN");
     return;
   }
 
-  const enteredHash = await hashPin(actualPin);
-  const dbRequest = indexedDB.open("stafflinks");
+  try {
+    const enteredHash = await hashPin(actualPin);
+    const db = await openDatabase();
 
-  dbRequest.onerror = (e) => {
-    console.error("IndexedDB error:", e.target.error);
-    alert("Failed to open IndexedDB");
-  };
-
-  dbRequest.onsuccess = (event) => {
-    const db = event.target.result;
-
-    if (!db.objectStoreNames.contains("tbl_team_account")) {
-      alert("No user data found. Please create a PIN first.");
-      window.location.href = "create-pin.php";
-      return;
-    }
-
-    const transaction = db.transaction("tbl_team_account", "readonly");
-    const store = transaction.objectStore("tbl_team_account");
+    const transaction = db.transaction(storeName, "readonly");
+    const store = transaction.objectStore(storeName);
     const getAllRequest = store.getAll();
 
-    getAllRequest.onerror = () =>
+    getAllRequest.onerror = function () {
       alert("Failed to read user data from IndexedDB");
+    };
 
     getAllRequest.onsuccess = function () {
       const users = getAllRequest.result;
-      if (users.length === 0) {
+
+      if (!users || users.length === 0) {
         alert("No user found. Please create a PIN first.");
-        window.location.href = "create-pin.php";
+        window.location.href = "./signup";
         return;
       }
 
@@ -109,7 +156,7 @@ async function login() {
 
       if (!user.user_password) {
         alert("No PIN set. Please create a PIN first.");
-        window.location.href = "create-pin.php";
+        window.location.href = "./signup";
         return;
       }
 
@@ -120,5 +167,8 @@ async function login() {
         clearPin();
       }
     };
-  };
+  } catch (error) {
+    console.error("IndexedDB error:", error);
+    alert("Failed to open IndexedDB");
+  }
 }

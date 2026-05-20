@@ -45,54 +45,115 @@
     <!-- SPA main content area -->
     <div id="main-content">
 
-        <!-- SideNav -->
-        <div id="sideNav">
-            <div class="user-info">
-                <img src="./images/usericon.png" alt="Profile">
-                <p class="name fs-6 fw-bold text-dark">Loading...</p>
-                <p class="email text-dark"></p>
-                <p class="phone text-dark"></p>
-            </div>
-            <hr>
-            <ul class="list-unstyled">
-                <li><a href="./app.php" class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'home.php') {
-                                                            echo 'active';
-                                                        } ?>"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a>
-                </li>
-                <li><a href="./visit-logs.php" class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'visit-logs.php') {
-                                                                    echo 'active';
-                                                                } ?>"><i class="bi bi-calendar-event me-2"></i>
-                        Visits</a></li>
-                <li><a href="./timesheet.php" class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'timesheet.php') {
-                                                                    echo 'active';
-                                                                } ?>"><i class="bi bi-book me-2"></i> Timesheet</a>
-                </li>
-                <li><a href="./calculator.php" class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == 'timesheet.php') {
-                                                                    echo 'active';
-                                                                } ?>"><i class="bi bi-calculator me-2"></i>
-                        Calculator</a></li>
-            </ul>
-            <hr>
-
-            <div class="navbar-content bg-light p-2" style="font-family: Arial, sans-serif;">
-                <span class="app-title" style="font-weight:bold; font-size:18px;">StaffLinks</span>
-                <span class="app-version" style="font-size:14px; margin-left:15px;">v3.0.6</span><br>
-                <span class="app-status" style="font-size:15px; color:#555;">Mobile App | Beta Release</span><br>
-                <span class="app-environment" style="font-size:15px; color:#777;">Environment: Development</span>
-            </div>
-
-            <a href="./logout" class="btn btn-danger logout-btn mt-5"><i class="bi bi-box-arrow-right"></i> Logout</a>
-        </div>
-
-        <!-- Overlay -->
-        <div id="overlay"></div>
-
-        <!-- Topbar -->
         <div class="topbar">
-            <button class="menu-btn fs-1" id="menuBtn"><i class="bi bi-list"></i></button>
-            <h4>StaffLinks</h4>
-            <div class="d-flex align-items-center gap-3">
-                <span id="topClock"></span>
-                <i class="bi bi-bell-fill fs-5" title="Notifications"></i>
-            </div>
+
+            <!-- Menu Button -->
+            <button class="menu-btn" type="button" id="menuBtn" aria-label="Open menu">
+                <i class="bi bi-list"></i>
+            </button>
+
+            <!-- Page Title -->
+            <h4 class="m-0 text-white flex-grow-1 text-center">
+                StaffLinks
+            </h4>
+
+            <!-- Optional Right Spacer -->
+            <div style="width:40px;"></div>
+
+            <!-- navbar.php - StaffLinks slide-out navigation -->
+            <nav id="sideNav" aria-label="StaffLinks side navigation">
+
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="m-0">StaffLinks</h5>
+
+                    <button class="btn btn-sm btn-light" type="button" id="closeNav" aria-label="Close menu">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="user-info">
+                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=180&q=80"
+                        alt="Sarah Johnson">
+
+                    <div class="name">Sarah Johnson</div>
+
+                    <div class="email">
+                        sarah.johnson@stafflinks.co.uk
+                    </div>
+
+                    <div class="phone">
+                        Carer • DBS Verified
+                    </div>
+                </div>
+
+                <ul>
+                    <li>
+                        <a class="active" href="dashboard.php">
+                            <i class="bi bi-grid-fill"></i> Dashboard
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="rota.php">
+                            <i class="bi bi-calendar2-week"></i> Rota
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="leave.php">
+                            <i class="bi bi-umbrella"></i> Leave
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="visit-logs.php">
+                            <i class="bi bi-clock-history"></i> Visits
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="timesheet.php">
+                            <i class="bi bi-clock"></i> Timesheet
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="calculator.php">
+                            <i class="bi bi-calculator"></i> Pay Estimator
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="service-users.php">
+                            <i class="bi bi-people"></i> Service Users
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="messages.php">
+                            <i class="bi bi-envelope"></i> Messages
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="documents.php">
+                            <i class="bi bi-file-earmark-text"></i> Documents
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="settings.php">
+                            <i class="bi bi-gear"></i> Settings
+                        </a>
+                    </li>
+                </ul>
+
+                <a href="./" class="btn btn-danger logout-btn">
+                    <i class="bi bi-box-arrow-left me-2"></i> Log out
+                </a>
+
+            </nav>
+
+            <div id="overlay"></div>
+
         </div>

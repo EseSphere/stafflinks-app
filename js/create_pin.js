@@ -86,7 +86,7 @@ const pinInput = document.getElementById("pin");
                 user.status2 = "active";
 
                 const updateRequest = store.put(user);
-                updateRequest.onsuccess = () => window.location.href = "synchronizer.php";
+                updateRequest.onsuccess = () => window.location.href = "./";
                 updateRequest.onerror = () => alert("Failed to save PIN. Try again.");
             };
 
