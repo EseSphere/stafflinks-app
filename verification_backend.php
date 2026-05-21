@@ -1,12 +1,10 @@
 <?php
-//signup_backend.php - Handles OTP generation and email sending for account verification
 header('Content-Type: application/json');
 error_reporting(E_ERROR | E_PARSE);
 
 require_once('dbconnection.php');
 
 function sendSMTPMail($to, $subject, $htmlMessage) {
-
     $smtpHost = 'stafflinks.co.uk';
     $smtpPort = 465;
     $smtpUser = 'no-reply@stafflinks.co.uk';
@@ -80,6 +78,47 @@ function sendSMTPMail($to, $subject, $htmlMessage) {
     return true;
 }
 
+function generatedPasswordAlreadyExists($conn, $plainPassword) {
+    $checkStmt = $conn->prepare("
+        SELECT user_password 
+        FROM tbl_team_account 
+        WHERE user_password IS NOT NULL 
+        AND user_password != ''
+    ");
+
+    $checkStmt->execute();
+    $result = $checkStmt->get_result();
+
+    $exists = false;
+
+    while ($row = $result->fetch_assoc()) {
+        $storedPassword = $row['user_password'];
+
+        if (password_verify($plainPassword, $storedPassword)) {
+            $exists = true;
+            break;
+        }
+
+        if ($storedPassword === $plainPassword) {
+            $exists = true;
+            break;
+        }
+    }
+
+    $checkStmt->close();
+
+    return $exists;
+}
+
+function generateUniquePassword($conn) {
+    do {
+        $password = str_pad(random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+        $exists = generatedPasswordAlreadyExists($conn, $password);
+    } while ($exists);
+
+    return $password;
+}
+
 try {
     $db = Database::getInstance();
     $conn = $db->getConnection();
@@ -93,8 +132,8 @@ try {
 
 $input = json_decode(file_get_contents('php://input'), true);
 
+$action = isset($input['action']) ? trim($input['action']) : '';
 $email = isset($input['email']) ? trim($input['email']) : '';
-$otp = isset($input['otp']) ? trim($input['otp']) : '';
 
 if (!$email) {
     echo json_encode([
@@ -112,37 +151,49 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     exit;
 }
 
-if (!$otp) {
-    $otp = random_int(100000, 999999);
+if ($action !== "send_generated_passcode") {
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid action."
+    ]);
+    exit;
 }
 
 try {
-    $stmt = $conn->prepare("SELECT * FROM tbl_team_account WHERE user_email_address = ?");
+    $stmt = $conn->prepare("SELECT id, user_email_address FROM tbl_team_account WHERE user_email_address = ? LIMIT 1");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
 
     if ($result->num_rows <= 0) {
         echo json_encode([
-            "exists" => false,
-            "message" => "Email not found. Please sign up first."
+            "success" => false,
+            "message" => "Account not found."
         ]);
         $stmt->close();
         $conn->close();
         exit;
     }
 
-    $user = $result->fetch_assoc();
     $stmt->close();
 
-    $updateStmt = $conn->prepare("UPDATE tbl_team_account SET otp = ? WHERE user_email_address = ?");
-    $updateStmt->bind_param("ss", $otp, $email);
+    $generatedPassword = generateUniquePassword($conn);
+    $hashedPassword = password_hash($generatedPassword, PASSWORD_DEFAULT);
+
+    $updateStmt = $conn->prepare("
+        UPDATE tbl_team_account 
+        SET user_password = ? 
+        WHERE user_email_address = ?
+    ");
+
+    $updateStmt->bind_param("ss", $hashedPassword, $email);
 
     if (!$updateStmt->execute()) {
         echo json_encode([
             "success" => false,
-            "message" => "Unable to update OTP. Please try again."
+            "message" => "Unable to save generated passcode."
         ]);
+
         $updateStmt->close();
         $conn->close();
         exit;
@@ -150,16 +201,16 @@ try {
 
     $updateStmt->close();
 
-    $subject = "Your StaffLinks Account Verification Code";
+    $safePassword = htmlspecialchars($generatedPassword, ENT_QUOTES, 'UTF-8');
 
-    $safeOtp = htmlspecialchars((string)$otp, ENT_QUOTES, 'UTF-8');
+    $subject = "Your StaffLinks Login Passcode";
 
     $message = '
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Account Verification</title>
+    <title>Your StaffLinks Passcode</title>
 </head>
 <body style="margin:0; padding:0; background-color:#f4f6f8; font-family:Arial, Helvetica, sans-serif;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f6f8; padding:30px 0;">
@@ -168,30 +219,46 @@ try {
                 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; background-color:#ffffff; border-radius:14px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.08);">
                     <tr>
                         <td style="background:linear-gradient(90deg,#c94a57,#e88a3d); padding:28px 30px; text-align:center;">
-                            <h1 style="margin:0; color:#ffffff; font-size:24px; font-weight:700;">Account Verification</h1>
+                            <h1 style="margin:0; color:#ffffff; font-size:24px; font-weight:700;">
+                                Account Verification Successful
+                            </h1>
                         </td>
                     </tr>
+
                     <tr>
                         <td style="padding:35px 30px; color:#333333;">
-                            <p style="margin:0 0 16px; font-size:16px; line-height:1.6;">Hello,</p>
-                            <p style="margin:0 0 22px; font-size:16px; line-height:1.6;">
-                                Thank you for setting up your StaffLinks account. Please use the verification code below to complete your account setup.
+                            <p style="margin:0 0 16px; font-size:16px; line-height:1.6;">
+                                Hello,
                             </p>
+
+                            <p style="margin:0 0 22px; font-size:16px; line-height:1.6;">
+                                Your StaffLinks account has been verified successfully.
+                                Please use the secure passcode below to login to your account.
+                            </p>
+
                             <div style="margin:30px 0; text-align:center;">
                                 <div style="display:inline-block; background-color:#f7faff; border:1px solid #e3e8ef; border-radius:12px; padding:18px 32px;">
-                                    <div style="font-size:13px; color:#6c757d; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">Verification Code</div>
-                                    <div style="font-size:34px; font-weight:800; letter-spacing:8px; color:#c94a57;">' . $safeOtp . '</div>
+                                    <div style="font-size:13px; color:#6c757d; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">
+                                        Login Passcode
+                                    </div>
+
+                                    <div style="font-size:34px; font-weight:800; letter-spacing:8px; color:#c94a57;">
+                                        ' . $safePassword . '
+                                    </div>
                                 </div>
                             </div>
+
                             <p style="margin:0 0 16px; font-size:15px; line-height:1.6; color:#555555;">
-                                For your security, do not share this code with anyone. If you did not request this verification code, please ignore this email.
+                                For security reasons, please keep this passcode private and do not share it with anyone.
                             </p>
+
                             <p style="margin:28px 0 0; font-size:15px; line-height:1.6;">
                                 Regards,<br>
                                 <strong>StaffLinks Support Team</strong>
                             </p>
                         </td>
                     </tr>
+
                     <tr>
                         <td style="background-color:#f7faff; padding:18px 30px; text-align:center; color:#6c757d; font-size:12px; line-height:1.5;">
                             This is an automated message from StaffLinks. Please do not reply to this email.
@@ -209,29 +276,26 @@ try {
     if (!$mailSent) {
         echo json_encode([
             "success" => false,
-            "exists" => true,
-            "message" => "OTP was generated, but the verification email could not be sent."
+            "message" => "Passcode generated successfully, but email could not be sent."
         ]);
+
         $conn->close();
         exit;
     }
 
-    $user['otp'] = $otp;
-
     echo json_encode([
         "success" => true,
-        "exists" => true,
-        "message" => "Verification code sent successfully.",
-        "user" => $user
+        "message" => "Unique login passcode generated and sent successfully."
     ]);
 
     $conn->close();
+    exit;
 
 } catch (Exception $e) {
     echo json_encode([
         "success" => false,
         "message" => "Server error: " . $e->getMessage()
     ]);
+    exit;
 }
-
-exit;
+?>

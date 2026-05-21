@@ -1,3 +1,5 @@
+// signup.js - Handles the signup process, including OTP generation and IndexedDB storage
+
 const dbName = "stafflinks";
 const storeName = "tbl_team_account";
 

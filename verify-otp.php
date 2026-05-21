@@ -213,6 +213,35 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
+    async function generateAndSendLoginPasscode(userEmail) {
+        const response = await fetch("verification_backend.php", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                action: "send_generated_passcode",
+                email: userEmail
+            })
+        });
+
+        const text = await response.text();
+        let data;
+
+        try {
+            data = JSON.parse(text);
+        } catch (err) {
+            console.error("Invalid JSON response:", text);
+            throw new Error("Server returned invalid response.");
+        }
+
+        if (!data.success) {
+            throw new Error(data.message || "Unable to generate and send passcode.");
+        }
+
+        return data;
+    }
+
     document.querySelectorAll("[data-num]").forEach(button => {
         button.addEventListener("click", function(e) {
             e.preventDefault();
@@ -273,10 +302,22 @@ document.addEventListener("DOMContentLoaded", function() {
 
             user.otp_verified = true;
             user.otp_verified_at = new Date().toISOString();
+            user.passcode_email_sent = false;
 
             await updateUserInObjectStore(user);
 
-            showMessage("OTP verified successfully. Redirecting...", "#198754");
+            showMessage("OTP verified. Generating your login passcode...", "#0d6efd");
+
+            await generateAndSendLoginPasscode(email);
+
+            user.passcode_email_sent = true;
+            user.passcode_email_sent_at = new Date().toISOString();
+
+            await updateUserInObjectStore(user);
+
+            showMessage(
+                "OTP verified successfully. Login passcode sent to your email. Redirecting...",
+                "#198754");
 
             setTimeout(() => {
                 window.location.href = "create-pin.php?email=" + encodeURIComponent(email);
@@ -284,8 +325,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
         } catch (error) {
             console.error(error);
-            showMessage(error || "Something went wrong while verifying OTP. Please try again.",
-                "#dc3545");
+            showMessage(error.message ||
+                "Something went wrong while verifying OTP. Please try again.", "#dc3545");
             verifyBtn.disabled = false;
         }
     });
