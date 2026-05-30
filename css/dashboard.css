@@ -1,0 +1,108 @@
+ .feature-card {
+        border: 0;
+        border-radius: var(--radius);
+        box-shadow: 0 10px 30px rgba(15, 23, 42, .08);
+        overflow: hidden;
+    }
+
+    .shift-market-card,
+    .training-card,
+    .task-card,
+    .wellbeing-card {
+        border: 1px solid rgba(201, 74, 87, .12);
+        border-radius: 18px;
+        padding: 16px;
+        background: #fff;
+        transition: .25s ease;
+    }
+
+    .shift-market-card:hover,
+    .training-card:hover,
+    .task-card:hover,
+    .wellbeing-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 14px 35px rgba(15, 23, 42, .09);
+    }
+
+    .shift-rate {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--accent);
+    }
+
+    .mini-calendar {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+    }
+
+    .calendar-day {
+        border-radius: 14px;
+        padding: 10px 6px;
+        text-align: center;
+        background: rgba(15, 23, 42, .04);
+        font-size: .85rem;
+    }
+
+    .calendar-day.active {
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: #fff;
+        font-weight: 700;
+    }
+
+    .calendar-day.alert-day {
+        background: rgba(255, 193, 7, .2);
+        color: #7a4b00;
+        font-weight: 700;
+    }
+
+    .emergency-alert {
+        border-left: 5px solid #dc3545;
+        background: rgba(220, 53, 69, .08);
+        border-radius: 16px;
+        padding: 16px;
+    }
+
+    .travel-pill,
+    .skill-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 7px 12px;
+        background: rgba(74, 144, 226, .12);
+        color: #1d5f9f;
+        font-size: .85rem;
+        font-weight: 600;
+    }
+
+    .swap-box {
+        border-radius: 16px;
+        background: rgba(15, 23, 42, .035);
+        padding: 14px;
+    }
+
+    .priority-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        background: var(--accent);
+    }
+
+    .pay-box {
+        border-radius: 18px;
+        padding: 18px;
+        background: linear-gradient(135deg, rgba(201, 74, 87, .12), rgba(244, 164, 96, .16));
+    }
+
+    .compliance-ring {
+        width: 76px;
+        height: 76px;
+        border-radius: 50%;
+        background: conic-gradient(var(--accent) 86%, rgba(15, 23, 42, .08) 0);
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        color: var(--accent);
+    }

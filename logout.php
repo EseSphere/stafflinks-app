@@ -1,22 +1,17 @@
-<?php
-session_start();
+ <script>
+(function() {
+    // ── 1. Clear all StaffLinks session keys from sessionStorage ──────────
+    sessionStorage.removeItem('loggedInUser');
+    sessionStorage.removeItem('loggedInUserId');
 
-$_SESSION = [];
+    // ── 2. Full wipe — catches any other keys written in the future ───────
+    //    sessionStorage.clear() removes EVERYTHING stored for this origin,
+    //    ensuring no stale data from the previous user lingers.
+    sessionStorage.clear();
 
-if (ini_get("session.use_cookies")) {
-    $params = session_get_cookie_params();
-    setcookie(
-        session_name(),
-        '',
-        time() - 42000,
-        $params["path"],
-        $params["domain"],
-        $params["secure"],
-        $params["httponly"]
-    );
-}
-
-session_destroy();
-
-header("Location: ./login");
-exit();
+    // ── 3. Redirect to the login page ─────────────────────────────────────
+    //    replace() is used instead of href so the logout page itself is
+    //    removed from browser history — pressing Back won't return here.
+    window.location.replace('./');
+})();
+ </script>

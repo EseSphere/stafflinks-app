@@ -49,6 +49,7 @@ CREATE TABLE `tbl_general_client_form` (
 CREATE TABLE `tbl_team_account` (
     `id` VARCHAR(255), -- ID
     `user_fullname` VARCHAR(255), -- Full Name
+    `team_dp` VARCHAR(255), -- Display Picture
     `user_email_address` VARCHAR(255), -- Email
     `user_phone_number` VARCHAR(255), -- Phone
     `user_password` VARCHAR(255), -- Password
@@ -104,7 +105,7 @@ CREATE TABLE `tbl_schedule_calls` (
     `uryyToeSS4` VARCHAR(255), -- unique ID
     `client_area` VARCHAR(255), -- Client Area
     `first_carer` VARCHAR(255), -- Carer Name 
-    `first_carer_Id` VARCHAR(255), -- Carer Special ID
+    `first_carer_Id` VARCHAR(255), -- Carer Special ID = user_special_Id in tbl_team_account
     `care_calls` VARCHAR(255), -- Care Calls (e.g. morning, lunch, tea, bed, extra morning, extra lunch, extra tea, extra bed)
     `dateTime_in` VARCHAR(255), -- Time In
     `dateTime_out` VARCHAR(255), -- Time Out
@@ -112,9 +113,26 @@ CREATE TABLE `tbl_schedule_calls` (
     `col_required_carers` VARCHAR(255), -- Number of Carers Required (e.g. 1 or 2)
     `Clientshift_Date` VARCHAR(255), -- Shift Date (e.g. visits for the day)
     `call_status` VARCHAR(255), -- Call Status (e.g. Scheduled, Not completed, or Completed)
+    `pay_rate` VARCHAR(255), -- Pay rate (e.g. £10 per hour or £0.45 per mile)
     `col_company_Id` VARCHAR(255), -- Company ID(this is not an integer it's a string)
     PRIMARY KEY (`id`)
 );
+
+-- This columns will update when the user checks in
+CREATE TABLE `tbl_team_status` (
+  `userId` int(11) NOT NULL, -- user ID
+  `col_full_name` varchar(500) NOT NULL, -- full name
+  `col_startDate` varchar(500) NOT NULL, -- start date of leave or unavailability
+  `col_endDate` varchar(500) NOT NULL, -- end date of leave or unavailability
+  `col_team_condition` varchar(500) NOT NULL, -- Reason for leave
+  `col_note` text NOT NULL, -- Note related to the leave or unavailability
+  `col_approval` varchar(500) NOT NULL, -- Approval status (e.g. Approved, Pending, Rejected)
+  `col_is_read` varchar(500) NOT NULL, -- Read status (e.g. Read, Unread)
+  `col_color_code` varchar(500) NOT NULL, -- Color code for calendar display (e.g. #FF0000 for red)
+  `uryyTteamoeSS4` varchar(500) NOT NULL, -- unique ID (uryyTteamoeSS4 in tbl_general_team_form) = user_special_Id in tbl_team_account
+  `col_company_Id` varchar(500) NOT NULL, -- Company ID(this is not an integer it's a string)
+  `dateTime` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp() -- Record creation or update timestamp
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- This columns will update when the user checks in
 CREATE TABLE `tbl_daily_shift_records` (
@@ -129,7 +147,7 @@ CREATE TABLE `tbl_daily_shift_records` (
     `col_care_call` VARCHAR(255), -- Care Calls (e.g. morning, lunch, tea, bed, extra morning, extra lunch, extra tea, extra bed)
     `client_group` VARCHAR(255), -- Client Area
     `carer_Name` VARCHAR(255), -- Carer Name
-    `col_carer_Id` VARCHAR(255), -- Carer Special ID
+    `col_carer_Id` VARCHAR(255), -- Carer Special ID = user_special_Id in tbl_team_account
     `col_area_Id` VARCHAR(255), -- Client area ID
     `col_company_Id` VARCHAR(255), -- Company ID(this is not an integer it's a string)
     `col_call_status` VARCHAR(255), -- Call Status (e.g. Scheduled, Not completed, or Completed)

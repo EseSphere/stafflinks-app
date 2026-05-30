@@ -152,20 +152,34 @@ async function login() {
         return;
       }
 
-      const user = users[0];
+      const matchedUser = users.find(
+        (u) => u.user_password && u.user_password === enteredHash
+      );
 
-      if (!user.user_password) {
-        alert("No PIN set. Please create a PIN first.");
-        window.location.href = "./signup";
+      if (!matchedUser) {
+        shakeCard();
+        clearPin();
         return;
       }
 
-      if (user.user_password === enteredHash) {
-        window.location.href = "dashboard.php";
-      } else {
-        shakeCard();
-        clearPin();
-      }
+      sessionStorage.setItem("loggedInUserId", matchedUser.id);
+      sessionStorage.setItem(
+        "loggedInUser",
+        JSON.stringify({
+          id: matchedUser.id,
+          user_fullname: matchedUser.user_fullname,
+          user_email_address: matchedUser.user_email_address,
+          user_phone_number: matchedUser.user_phone_number,
+          team_dp: matchedUser.team_dp,
+          user_special_Id: matchedUser.user_special_Id,
+          col_company_Id: matchedUser.col_company_Id,
+          col_cookies_identifier: matchedUser.col_cookies_identifier,
+        })
+      );
+
+      const specialId = encodeURIComponent(matchedUser.user_special_Id || "");
+      const companyId = encodeURIComponent(matchedUser.col_company_Id || "");
+      window.location.href = `./dashboard?user_special_Id=${specialId}&col_company_Id=${companyId}`;
     };
   } catch (error) {
     console.error("IndexedDB error:", error);
