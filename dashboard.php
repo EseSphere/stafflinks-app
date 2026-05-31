@@ -8,6 +8,8 @@ $monthlyPay       = '£0.00';
 $leaveRemaining   = 0;
 $weekShiftDays    = [];
 $openShifts       = [];
+$recentShifts     = [];
+$todayWellbeing   = '';
 
 $carerId   = isset($_GET['carer_id'])      ? trim($_GET['carer_id'])      : '';
 $companyId = isset($_GET['col_company_Id']) ? trim($_GET['col_company_Id']) : '';
@@ -16,6 +18,38 @@ if ($carerId !== '') {
     include_once 'dbconnect.php';
 
     if (!$conn->connect_error) {
+
+        // ── Wellbeing POST handler ─────────────────────────────────────────────
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['wellbeing_mood'])) {
+            $mood = trim($_POST['wellbeing_mood']);
+            $allowed = ['Good', 'Okay', 'Need support'];
+            if (in_array($mood, $allowed, true)) {
+                $wStmt = $conn->prepare("
+                    INSERT INTO tbl_wellbeing (col_carer_Id, col_company_Id, mood, checked_at)
+                    VALUES (?, ?, ?, NOW())
+                ");
+                $wStmt->bind_param('sss', $carerId, $companyId, $mood);
+                $wStmt->execute();
+                $wStmt->close();
+            }
+        }
+
+        // ── Check if carer already submitted wellbeing today ──────────────────
+        $todayOnly = date('Y-m-d');
+        $wChk = $conn->prepare("
+            SELECT mood FROM tbl_wellbeing
+            WHERE  col_carer_Id  = ?
+              AND  col_company_Id = ?
+              AND  DATE(checked_at) = ?
+            ORDER  BY checked_at DESC
+            LIMIT  1
+        ");
+        $wChk->bind_param('sss', $carerId, $companyId, $todayOnly);
+        $wChk->execute();
+        $wChk->bind_result($todayWellbeing);
+        $wChk->fetch();
+        $wChk->close();
+        $todayWellbeing = $todayWellbeing ?: '';
 
         // ── Monthly hours (tbl_daily_shift_records) ────────────────────────
         $monthStart = date('Y-m-01');
@@ -187,10 +221,6 @@ if ($carerId !== '') {
         $stmt->close();
 
         // ── Open Shifts Marketplace ────────────────────────────────────────
-        // Group unassigned scheduled shifts by col_run_name + Clientshift_Date.
-        // Each card shows the run name, area, earliest start and latest end
-        // across all calls in that group, and links to accept-shift.php with
-        // the group key so the target page can assign the carer to all rows.
         $todayStr = date('Y-m-d');
 
         if ($companyId !== '') {
@@ -242,6 +272,24 @@ if ($carerId !== '') {
         }
 
         $stmt->close();
+
+        // ── 3 most recent completed shifts for the dashboard widget ────────────
+        $stmt = $conn->prepare("
+            SELECT client_name, shift_date, planned_timeIn, planned_timeOut, col_call_status
+            FROM   tbl_daily_shift_records
+            WHERE  col_carer_Id = ?
+              AND  col_company_Id = ?
+            ORDER  BY shift_date DESC, planned_timeIn DESC
+            LIMIT  3
+        ");
+        $stmt->bind_param('ss', $carerId, $companyId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $recentShifts[] = $row;
+        }
+        $stmt->close();
+
         $conn->close();
     }
 }
@@ -348,7 +396,7 @@ function formatTimeRange(?string $in, ?string $out): string {
                 <div class="stat-label">Shift days this month</div>
                 <a href="calendar.php" class="small text-decoration-none mt-2 d-inline-block"
                     style="color:var(--accent)">
-                    View rota <i class="bi bi-arrow-right"></i>
+                    View calendar <i class="bi bi-arrow-right"></i>
                 </a>
             </article>
 
@@ -449,8 +497,6 @@ function formatTimeRange(?string $in, ?string $out): string {
                                     $shiftDateFmt = formatShiftDate($shift['Clientshift_Date']  ?? '');
                                     $timeRange    = formatTimeRange($shift['earliest_in'], $shift['latest_out']);
 
-                                    // Pass the group key to accept-shift.php so it can assign the carer to every
-                                    // call in the run on that date.
                                     $acceptUrl = 'accept-shift.php'
                                                . '?run='      . urlencode($shift['col_run_name']    ?? '')
                                                . '&date='     . urlencode($shift['Clientshift_Date'] ?? '')
@@ -512,41 +558,39 @@ function formatTimeRange(?string $in, ?string $out): string {
                     </div>
                 </div>
 
+                <!-- ── UK Healthcare News (replaces Training & Compliance) ── -->
                 <div class="card feature-card mb-4 fade-in-up">
                     <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3">
                             <div>
-                                <h4 class="fw-bold mb-1">Training & Compliance</h4>
-                                <div class="small-muted">Keep your documents and training up to date.</div>
+                                <h4 class="fw-bold mb-1">
+                                    <i class="bi bi-newspaper me-2"></i>UK Healthcare News
+                                </h4>
+                                <div class="small-muted">Latest updates for carers &amp; nurses.</div>
                             </div>
-                            <div class="compliance-ring">86%</div>
+                            <button class="btn btn-sm" id="newsRefreshBtn"
+                                style="border-radius:999px;border:1px solid var(--bs-border-color);font-size:.78rem"
+                                onclick="loadHealthcareNews()">
+                                <i class="bi bi-arrow-clockwise me-1" id="newsRefreshIcon"></i>Refresh
+                            </button>
                         </div>
 
-                        <div class="row g-3 mt-3">
-                            <div class="col-md-4">
-                                <div class="training-card">
-                                    <i class="bi bi-file-earmark-check-fill text-success fs-3"></i>
-                                    <h6 class="fw-bold mt-2 mb-1">DBS</h6>
-                                    <div class="small-muted">Valid until Dec 2026</div>
+                        <div id="healthcareNewsContainer">
+                            <!-- Skeleton placeholders shown while news loads -->
+                            <?php for ($s = 0; $s < 3; $s++): ?>
+                            <div class="d-flex gap-3 p-3 mb-2 rounded-3 border placeholder-glow">
+                                <span class="placeholder rounded-3" style="width:40px;height:40px;flex-shrink:0"></span>
+                                <div class="flex-grow-1">
+                                    <span class="placeholder col-3 mb-2 d-block" style="height:12px"></span>
+                                    <span class="placeholder col-12 mb-1 d-block" style="height:14px"></span>
+                                    <span class="placeholder col-6 d-block" style="height:11px"></span>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="training-card">
-                                    <i class="bi bi-capsule-pill text-primary fs-3"></i>
-                                    <h6 class="fw-bold mt-2 mb-1">Medication</h6>
-                                    <div class="small-muted">Renewal in 18 days</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="training-card">
-                                    <i class="bi bi-fire text-danger fs-3"></i>
-                                    <h6 class="fw-bold mt-2 mb-1">Fire Safety</h6>
-                                    <div class="small-muted">Course incomplete</div>
-                                </div>
-                            </div>
+                            <?php endfor; ?>
                         </div>
                     </div>
                 </div>
+                <!-- ── End UK Healthcare News ── -->
 
             </div>
 
@@ -603,7 +647,7 @@ function formatTimeRange(?string $in, ?string $out): string {
                                     style="background:var(--accent2);border-radius:14px">
                                     <i class="bi bi-calendar2-week-fill d-block fs-3 mb-2"></i>
                                     <strong>Calendar</strong>
-                                    <small class="d-block opacity-75">View shifts</small>
+                                    <small class="d-block opacity-75">View events</small>
                                 </a>
                             </div>
                             <div class="col-6">
@@ -644,55 +688,72 @@ function formatTimeRange(?string $in, ?string $out): string {
 
                 <div class="card border-0 shadow-sm mb-4 fade-in-up" style="border-radius:var(--radius)">
                     <div class="card-body">
-                        <h4 class="fw-bold mb-3">Pay Snapshot</h4>
-                        <div class="pay-box">
-                            <div class="d-flex justify-content-between">
-                                <span class="small-muted">Next payday</span>
-                                <strong>Fri, 31 May</strong>
-                            </div>
-                            <div class="d-flex justify-content-between mt-2">
-                                <span class="small-muted">Approved hours</span>
-                                <strong>24.5h</strong>
-                            </div>
-                            <div class="d-flex justify-content-between mt-2">
-                                <span class="small-muted">Pending timesheets</span>
-                                <strong>2</strong>
-                            </div>
-                            <a href="payroll.php" class="btn btn-sm text-white mt-3"
-                                style="background:var(--accent);border-radius:999px">View payroll</a>
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h4 class="fw-bold mb-0">Staff Wellbeing</h4>
+                            <span class="small-muted" style="font-size:.72rem">
+                                <?= date('D, j M') ?>
+                            </span>
                         </div>
-                    </div>
-                </div>
-
-                <div class="card border-0 shadow-sm mb-4 fade-in-up" style="border-radius:var(--radius)">
-                    <div class="card-body">
-                        <h4 class="fw-bold mb-3">Skills Match</h4>
-                        <div class="d-flex flex-wrap gap-2">
-                            <span class="skill-pill"><i class="bi bi-check-circle"></i> Dementia Care</span>
-                            <span class="skill-pill"><i class="bi bi-check-circle"></i> Medication</span>
-                            <span class="skill-pill"><i class="bi bi-check-circle"></i> Moving & Handling</span>
-                            <span class="skill-pill"><i class="bi bi-plus-circle"></i> Add Skill</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card border-0 shadow-sm mb-4 fade-in-up" style="border-radius:var(--radius)">
-                    <div class="card-body">
-                        <h4 class="fw-bold mb-3">Staff Wellbeing</h4>
                         <div class="wellbeing-card">
-                            <div class="d-flex align-items-center gap-3">
+                            <?php if ($todayWellbeing !== ''): ?>
+                            <?php
+                                $wbConfig = [
+                                    'Good'         => ['icon' => 'bi-emoji-smile-fill',  'colour' => '#198754', 'bg' => '#f0fdf4', 'border' => '#bbf7d0', 'msg' => "Great keep it up! Your wellbeing matters."],
+                                    'Okay'         => ['icon' => 'bi-emoji-neutral-fill', 'colour' => '#f59e0b', 'bg' => '#fffbeb', 'border' => '#fde68a', 'msg' => "Thanks for checking in. Take it one step at a time."],
+                                    'Need support' => ['icon' => 'bi-emoji-frown-fill',   'colour' => '#dc2626', 'bg' => '#fff1f2', 'border' => '#fecdd3', 'msg' => "We're here for you. Please speak to your manager or wellbeing lead."],
+                                ];
+                                $wbCfg = $wbConfig[$todayWellbeing] ?? $wbConfig['Okay'];
+                                ?>
+                            <div
+                                style="background:<?= $wbCfg['bg'] ?>;border:1.5px solid <?= $wbCfg['border'] ?>;border-radius:12px;padding:.9rem 1rem;">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <i class="bi <?= $wbCfg['icon'] ?>"
+                                        style="color:<?= $wbCfg['colour'] ?>;font-size:1.4rem"></i>
+                                    <strong style="color:<?= $wbCfg['colour'] ?>">
+                                        Feeling <?= htmlspecialchars($todayWellbeing) ?> today
+                                    </strong>
+                                </div>
+                                <div class="small-muted"><?= htmlspecialchars($wbCfg['msg']) ?></div>
+                                <?php if ($todayWellbeing === 'Need support'): ?>
+                                <a href="mailto:support@stafflinks.co.uk" class="btn btn-sm mt-2 text-white"
+                                    style="background:#dc2626;border-radius:999px;font-size:.78rem">
+                                    <i class="bi bi-envelope me-1"></i> Contact support
+                                </a>
+                                <?php endif; ?>
+                            </div>
+                            <div class="small-muted mt-2 text-center" style="font-size:.72rem">
+                                <i class="bi bi-check-circle me-1 text-success"></i>
+                                Check-in recorded for today. Come back tomorrow!
+                            </div>
+                            <?php else: ?>
+                            <div class="d-flex align-items-center gap-3 mb-3">
                                 <i class="bi bi-heart-fill text-danger fs-3"></i>
                                 <div>
                                     <strong>How are you feeling today?</strong>
                                     <div class="small-muted">Check in after long or difficult shifts.</div>
                                 </div>
                             </div>
-                            <div class="d-flex gap-2 mt-3">
-                                <button class="btn btn-sm btn-outline-success" style="border-radius:999px">Good</button>
-                                <button class="btn btn-sm btn-outline-warning" style="border-radius:999px">Okay</button>
-                                <button class="btn btn-sm btn-outline-danger" style="border-radius:999px">Need
-                                    support</button>
-                            </div>
+                            <form method="POST"
+                                action="dashboard.php?carer_id=<?= urlencode($carerId) ?><?= $companyId ? '&col_company_Id='.urlencode($companyId) : '' ?>"
+                                id="wellbeingForm">
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button type="submit" name="wellbeing_mood" value="Good"
+                                        class="btn btn-sm btn-outline-success wellbeing-btn"
+                                        style="border-radius:999px">
+                                        <i class="bi bi-emoji-smile me-1"></i>Good
+                                    </button>
+                                    <button type="submit" name="wellbeing_mood" value="Okay"
+                                        class="btn btn-sm btn-outline-warning wellbeing-btn"
+                                        style="border-radius:999px">
+                                        <i class="bi bi-emoji-neutral me-1"></i>Okay
+                                    </button>
+                                    <button type="submit" name="wellbeing_mood" value="Need support"
+                                        class="btn btn-sm btn-outline-danger wellbeing-btn" style="border-radius:999px">
+                                        <i class="bi bi-emoji-frown me-1"></i>Need support
+                                    </button>
+                                </div>
+                            </form>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -701,33 +762,61 @@ function formatTimeRange(?string $in, ?string $out): string {
                     <div class="card-body">
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <h4 class="fw-bold mb-0">Past Shift Records</h4>
-                            <a href="past-shifts.php" class="text-decoration-none" style="color:var(--accent)">View
-                                all</a>
+                            <a href="past-shifts.php?carer_id=<?= urlencode($carerId) ?><?= $companyId ? '&col_company_Id='.urlencode($companyId) : '' ?>"
+                                class="text-decoration-none" style="color:var(--accent)">View all</a>
                         </div>
-                        <div class="d-flex align-items-center gap-3 py-2 border-bottom">
-                            <i class="bi bi-check-circle-fill text-success"></i>
+                        <?php if (empty($recentShifts)): ?>
+                        <div class="text-center py-3 small-muted">
+                            <i class="bi bi-clock-history d-block fs-4 mb-1 opacity-50"></i>
+                            No shift records yet.
+                        </div>
+                        <?php else: ?>
+                        <?php foreach ($recentShifts as $idx => $rs):
+                                $rsStatus = strtolower(trim($rs['col_call_status'] ?? ''));
+                                $rsIcon   = $rsStatus === 'completed'
+                                            ? 'bi-check-circle-fill text-success'
+                                            : ($rsStatus === 'not completed'
+                                               ? 'bi-x-circle-fill text-danger'
+                                               : 'bi-clock-fill text-primary');
+
+                                $rsDate = '';
+                                $d = DateTime::createFromFormat('Y-m-d', $rs['shift_date'] ?? '');
+                                if ($d) $rsDate = $d->format('D, j M');
+
+                                $rsIn  = $rs['planned_timeIn']  ? substr($rs['planned_timeIn'],  0, 5) : '';
+                                $rsOut = $rs['planned_timeOut'] ? substr($rs['planned_timeOut'], 0, 5) : '';
+                                $rsTime = ($rsIn && $rsOut) ? "$rsIn – $rsOut" : ($rsIn ?: ($rsOut ?: '—'));
+
+                                $rsDuration = '';
+                                if ($rsIn && $rsOut) {
+                                    $tI = DateTime::createFromFormat('H:i', $rsIn);
+                                    $tO = DateTime::createFromFormat('H:i', $rsOut);
+                                    if ($tI && $tO) {
+                                        if ($tO < $tI) $tO->modify('+1 day');
+                                        $diff = $tO->diff($tI);
+                                        $rsDuration = $diff->h . 'h'
+                                            . ($diff->i > 0 ? ' ' . $diff->i . 'm' : '');
+                                    }
+                                }
+
+                                $isLast = ($idx === count($recentShifts) - 1);
+                            ?>
+                        <div class="d-flex align-items-center gap-3 py-2 <?= $isLast ? '' : 'border-bottom' ?>">
+                            <i class="bi <?= $rsIcon ?>"></i>
                             <div class="flex-grow-1">
-                                <strong>Mr. James Wilson</strong>
-                                <div class="small-muted">Sun, 19 May • 09:00 – 11:00</div>
+                                <strong><?= htmlspecialchars($rs['client_name'] ?? 'Unknown') ?></strong>
+                                <div class="small-muted">
+                                    <?= htmlspecialchars($rsDate) ?>
+                                    <?= $rsDate && $rsTime !== '—' ? ' • ' : '' ?>
+                                    <?= htmlspecialchars($rsTime) ?>
+                                </div>
                             </div>
-                            <span class="small-muted">2h</span>
+                            <?php if ($rsDuration): ?>
+                            <span class="small-muted"><?= htmlspecialchars($rsDuration) ?></span>
+                            <?php endif; ?>
                         </div>
-                        <div class="d-flex align-items-center gap-3 py-2 border-bottom">
-                            <i class="bi bi-check-circle-fill text-success"></i>
-                            <div class="flex-grow-1">
-                                <strong>Mrs. Margaret Smith</strong>
-                                <div class="small-muted">Sat, 18 May • 14:00 – 16:00</div>
-                            </div>
-                            <span class="small-muted">2h</span>
-                        </div>
-                        <div class="d-flex align-items-center gap-3 py-2">
-                            <i class="bi bi-check-circle-fill text-success"></i>
-                            <div class="flex-grow-1">
-                                <strong>Ms. Linda Williams</strong>
-                                <div class="small-muted">Fri, 17 May • 19:00 – 21:30</div>
-                            </div>
-                            <span class="small-muted">2.5h</span>
-                        </div>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -750,6 +839,167 @@ function formatTimeRange(?string $in, ?string $out): string {
     <?php include 'new-footer.php'; ?>
 
     <script>
+    // ── UK Healthcare News loader ─────────────────────────────────────────────
+    const NEWS_TAG_MAP = {
+        nhs: {
+            label: 'NHS',
+            bg: '#E6F1FB',
+            color: '#0C447C',
+            iconBg: '#E6F1FB',
+            iconColor: '#185FA5',
+            icon: 'bi-building'
+        },
+        workforce: {
+            label: 'Workforce',
+            bg: '#E1F5EE',
+            color: '#085041',
+            iconBg: '#E1F5EE',
+            iconColor: '#0F6E56',
+            icon: 'bi-people-fill'
+        },
+        policy: {
+            label: 'Policy',
+            bg: '#FAEEDA',
+            color: '#633806',
+            iconBg: '#FAEEDA',
+            iconColor: '#854F0B',
+            icon: 'bi-file-text-fill'
+        },
+        safety: {
+            label: 'Safety',
+            bg: '#FCEBEB',
+            color: '#791F1F',
+            iconBg: '#FCEBEB',
+            iconColor: '#A32D2D',
+            icon: 'bi-shield-fill-check'
+        },
+        pay: {
+            label: 'Pay',
+            bg: '#EEEDFE',
+            color: '#3C3489',
+            iconBg: '#EEEDFE',
+            iconColor: '#534AB7',
+            icon: 'bi-cash-stack'
+        },
+    };
+
+    function escH(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    async function loadHealthcareNews() {
+        const container = document.getElementById('healthcareNewsContainer');
+        const btn = document.getElementById('newsRefreshBtn');
+        const icon = document.getElementById('newsRefreshIcon');
+
+        btn.disabled = true;
+        icon.className = 'bi bi-arrow-clockwise me-1 news-spin';
+
+        // Inject spin keyframe once
+        if (!document.getElementById('newsSpinStyle')) {
+            const s = document.createElement('style');
+            s.id = 'newsSpinStyle';
+            s.textContent =
+                '.news-spin{animation:newsSpin .7s linear infinite}@keyframes newsSpin{to{transform:rotate(360deg)}}';
+            document.head.appendChild(s);
+        }
+
+        // Show skeleton while loading
+        container.innerHTML = `
+            ${[1,2,3].map(() => `
+            <div class="d-flex gap-3 p-3 mb-2 rounded-3 border placeholder-glow">
+                <span class="placeholder rounded-3" style="width:40px;height:40px;flex-shrink:0"></span>
+                <div class="flex-grow-1">
+                    <span class="placeholder col-3 mb-2 d-block" style="height:12px"></span>
+                    <span class="placeholder col-12 mb-1 d-block" style="height:14px"></span>
+                    <span class="placeholder col-6 d-block" style="height:11px"></span>
+                </div>
+            </div>`).join('')}`;
+
+        try {
+            const resp = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: 'claude-sonnet-4-20250514',
+                    max_tokens: 1000,
+                    tools: [{
+                        type: 'web_search_20250305',
+                        name: 'web_search'
+                    }],
+                    messages: [{
+                        role: 'user',
+                        content: `Search for the 3 most recent UK healthcare news stories (published within the last 7 days) specifically relevant to carers and nurses in the UK. Focus on topics like NHS staffing, pay, working conditions, training requirements, CQC updates, or healthcare policy changes. Return ONLY valid JSON (no markdown, no preamble, no backticks) in this exact format:
+[
+  { "title": "...", "summary": "One sentence summary max 120 chars.", "source": "Source name", "date": "e.g. 28 May 2025", "url": "https://...", "category": "nhs|workforce|policy|safety|pay" },
+  { ... },
+  { ... }
+]
+Use category values exactly as listed. If no URL is available use "".`
+                    }]
+                })
+            });
+
+            const data = await resp.json();
+            const fullTxt = data.content.map(i => i.text || '').filter(Boolean).join('');
+            const clean = fullTxt.replace(/```json|```/g, '').trim();
+            const s = clean.indexOf('[');
+            const e = clean.lastIndexOf(']');
+            const articles = JSON.parse(clean.slice(s, e + 1));
+
+            container.innerHTML = articles.map(item => {
+                const cat = NEWS_TAG_MAP[item.category] || NEWS_TAG_MAP.nhs;
+                return `
+                <div class="d-flex gap-3 p-3 mb-2 rounded-3 border"
+                     style="border-color:rgba(0,0,0,.07)!important;transition:background .15s"
+                     onmouseover="this.style.background='rgba(0,0,0,.025)'"
+                     onmouseout="this.style.background=''">
+                    <div class="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0"
+                         style="width:40px;height:40px;background:${cat.iconBg}">
+                        <i class="bi ${cat.icon}" style="color:${cat.iconColor};font-size:1.1rem"></i>
+                    </div>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <span class="badge mb-1"
+                              style="background:${cat.bg};color:${cat.color};font-size:.68rem;font-weight:500;border-radius:999px;padding:3px 9px">
+                            ${escH(cat.label)}
+                        </span>
+                        <div class="fw-bold" style="font-size:.85rem;line-height:1.35;margin-bottom:3px">
+                            ${escH(item.title)}
+                        </div>
+                        <div class="small-muted mb-1" style="font-size:.78rem">${escH(item.summary)}</div>
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+                            <span style="font-size:.72rem;color:#888">${escH(item.source)} &bull; ${escH(item.date)}</span>
+                            ${item.url
+                                ? `<a href="${escH(item.url)}" target="_blank" rel="noopener"
+                                      class="text-decoration-none"
+                                      style="font-size:.72rem;color:var(--accent)">
+                                      Read <i class="bi bi-box-arrow-up-right" style="font-size:.65rem"></i>
+                                   </a>`
+                                : ''}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+
+        } catch (err) {
+            container.innerHTML = `
+            <div class="text-center py-4 small-muted">
+                <i class="bi bi-wifi-off d-block fs-4 mb-2 opacity-50"></i>
+                Could not load news right now.
+                <a href="#" onclick="loadHealthcareNews();return false;" style="color:var(--accent)">Try again</a>
+            </div>`;
+        }
+
+        btn.disabled = false;
+        icon.className = 'bi bi-arrow-clockwise me-1';
+    }
+
+    // ── User session & profile ────────────────────────────────────────────────
     (function() {
         const DEFAULT_AVATAR = 'https://admin.stafflinks.co.uk/assets/images/default-avatar.jpg';
         const UPLOAD_BASE = 'https://admin.stafflinks.co.uk/uploads/team_dp/';
@@ -774,7 +1024,6 @@ function formatTimeRange(?string $in, ?string $out): string {
         (function ensureParams() {
             const specialId = user.user_special_Id;
             const companyId = user.col_company_Id;
-
             const url = new URL(window.location.href);
             let changed = false;
 
@@ -782,12 +1031,10 @@ function formatTimeRange(?string $in, ?string $out): string {
                 url.searchParams.set('carer_id', specialId);
                 changed = true;
             }
-
             if (companyId && url.searchParams.get('col_company_Id') !== String(companyId)) {
                 url.searchParams.set('col_company_Id', companyId);
                 changed = true;
             }
-
             if (changed) {
                 window.location.replace(url.toString());
             }
@@ -869,6 +1116,9 @@ function formatTimeRange(?string $in, ?string $out): string {
                 window.location.href = './';
             });
         }
+
+        // Load healthcare news after session is confirmed valid
+        loadHealthcareNews();
     })();
     </script>
 

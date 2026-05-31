@@ -18,11 +18,10 @@
         <li><a class="active" href="dashboard.php"><i class="bi bi-grid-fill"></i> Dashboard</a></li>
         <li><a href="calendar.php"><i class="bi bi-calendar2-week"></i> Calendar</a></li>
         <li><a href="leave.php"><i class="bi bi-umbrella"></i> Leave</a></li>
-        <li><a href="visit-logs.php"><i class="bi bi-clock-history"></i> Visits</a></li>
         <li><a href="timesheet.php"><i class="bi bi-clock"></i> Timesheet</a></li>
         <li><a href="calculator.php"><i class="bi bi-calculator"></i> Pay Estimator</a></li>
-        <li><a href="service-users.php"><i class="bi bi-people"></i> Service Users</a></li>
-        <li><a href="messages.php"><i class="bi bi-envelope"></i> Messages</a></li>
+        <li><a href="past-shifts.php"><i class="bi bi-people"></i> Past Shifts</a></li>
+        <li><a href="community.php"><i class="bi bi-envelope"></i> Community</a></li>
         <li><a href="settings.php"><i class="bi bi-gear"></i> Settings</a></li>
     </ul>
 
