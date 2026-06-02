@@ -259,3 +259,110 @@
            text-align: center;
            vertical-align: middle;
        }
+
+       .btn-pop {
+           transform: scale(1.2);
+           transition: transform 0.15s ease;
+       }
+
+       @keyframes shake {
+           0% {
+               transform: translateX(0);
+           }
+
+           20% {
+               transform: translateX(-10px);
+           }
+
+           40% {
+               transform: translateX(10px);
+           }
+
+           60% {
+               transform: translateX(-10px);
+           }
+
+           80% {
+               transform: translateX(10px);
+           }
+
+           100% {
+               transform: translateX(0);
+           }
+       }
+
+       .shake {
+           animation: shake 0.4s;
+       }
+
+       :root {
+           --accent: #c94a57;
+           --accent2: #e88a3d;
+       }
+
+       body {
+           margin: 0;
+           padding: 0;
+           font-size: 18px;
+           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+           background-color: #fff !important;
+           overscroll-behavior: none;
+       }
+
+       html {
+           overscroll-behavior: none;
+           background-color: #fff !important;
+       }
+
+       .card {
+           box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .1), 0 1px 2px 0 rgba(0, 0, 0, .06);
+           position: relative;
+           display: flex;
+           flex-direction: column;
+           min-width: 0;
+           word-wrap: break-word;
+           background-color: #fff;
+           background-clip: border-box;
+           border: 0 solid rgba(0, 0, 0, .125);
+           border-radius: .25rem;
+       }
+
+       .pin-input {
+           font-size: 3rem;
+           letter-spacing: 0.6rem;
+           text-align: center;
+           border: none;
+           outline: none;
+           background: inherit !important;
+           pointer-events: none;
+       }
+
+       .keypad button {
+           width: 50px;
+           height: 50px;
+           margin-bottom: 8px;
+           background-color: rgba(220, 221, 225, .5);
+           color: rgba(47, 54, 64, .9);
+           font-size: 16px;
+           font-weight: 800;
+       }
+
+       .keypad button:active {
+           transform: scale(0.95);
+       }
+
+       .btn-login {
+           background-color: #0d6efd;
+           color: #fff;
+           font-size: 1.5rem;
+       }
+
+       .btn-login:hover {
+           background-color: #0b5ed7;
+           color: #fff;
+       }
+
+       .btn-clear {
+           background-color: #dc3545;
+           color: #fff;
+       }
