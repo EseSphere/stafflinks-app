@@ -1,11 +1,4 @@
 <?php
-// ─────────────────────────────────────────────────────────────────────────────
-// calendar.php  –  Carer Shift Calendar
-// URL params: ?carer_id=&col_company_Id=&view=month|week|day&y=&m=&d=
-// Fetches all of the carer's scheduled / completed shifts and renders an
-// interactive month / week / day calendar. Shift detail slides in as a drawer.
-// ─────────────────────────────────────────────────────────────────────────────
-
 $carerId   = isset($_GET['carer_id'])       ? trim($_GET['carer_id'])       : '';
 $companyId = isset($_GET['col_company_Id']) ? trim($_GET['col_company_Id']) : '';
 $view      = in_array($_GET['view'] ?? '', ['month','week','day'])
@@ -1367,6 +1360,7 @@ $rawRowsJson  = json_encode($rawRows, JSON_HEX_TAG | JSON_HEX_AMP);
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
+        <!--Add visits button here-->
         <div class="drawer-body" id="drawer-body">
             <div class="drawer-empty">
                 <i class="bi bi-calendar-event" style="font-size:2rem;opacity:.3"></i>

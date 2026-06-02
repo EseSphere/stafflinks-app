@@ -1,3 +1,4 @@
+<!--index.php code-->
 <?php require_once('header-log.php'); ?>
 <style>
 .btn-pop {
@@ -84,6 +85,47 @@
         width: 100%;
     }
 }
+
+.pin-input {
+    font-size: 3rem;
+    letter-spacing: 0.6rem;
+    text-align: center;
+    border: none;
+    outline: none;
+    background: inherit !important;
+    pointer-events: none;
+}
+
+.keypad button {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 8px;
+    /* reduced from 20px */
+    background-color: rgba(220, 221, 225, .5);
+    color: rgba(47, 54, 64, .9);
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.keypad button:active {
+    transform: scale(0.95);
+}
+
+.btn-login {
+    background-color: #0d6efd;
+    color: #fff;
+    font-size: 1.5rem;
+}
+
+.btn-login:hover {
+    background-color: #0b5ed7;
+    color: #fff;
+}
+
+.btn-clear {
+    background-color: #dc3545;
+    color: #fff;
+}
 </style>
 
 <div class="mt-5" data-aos="zoom-in" data-aos-duration="1000" style="z-index:1;">
@@ -96,23 +138,24 @@
                 placeholder="••••" type="text" maxlength="4" id="pin" class="pin-input form-control-plaintext mb-4"
                 readonly>
 
-            <div class="keypad d-grid gap-2 mt-3" id="keypad">
-                <div class="row">
+            <div class="keypad d-grid gap-1 mt-2" id="keypad">
+                <!-- gap-2→gap-1, mt-3→mt-2 -->
+                <div class="row g-0">
                     <div class="col-4"><button class="btn btn-light" data-num="1">1</button></div>
                     <div class="col-4"><button class="btn btn-light" data-num="2">2</button></div>
                     <div class="col-4"><button class="btn btn-light" data-num="3">3</button></div>
                 </div>
-                <div class="row">
+                <div class="row g-0">
                     <div class="col-4"><button class="btn btn-light" data-num="4">4</button></div>
                     <div class="col-4"><button class="btn btn-light" data-num="5">5</button></div>
                     <div class="col-4"><button class="btn btn-light" data-num="6">6</button></div>
                 </div>
-                <div class="row">
+                <div class="row g-0">
                     <div class="col-4"><button class="btn btn-light" data-num="7">7</button></div>
                     <div class="col-4"><button class="btn btn-light" data-num="8">8</button></div>
                     <div class="col-4"><button class="btn btn-light" data-num="9">9</button></div>
                 </div>
-                <div class="row">
+                <div class="row g-0">
                     <div class="col-4"><button class="btn btn-clear" id="clearPin">C</button></div>
                     <div class="col-4"><button class="btn btn-light" data-num="0">0</button></div>
                     <div class="col-4"><button class="btn btn-login" id="loginBtn"><i
@@ -121,7 +164,7 @@
             </div>
 
             <div class="create-account-box">
-                <span class="create-account-text">Don’t have an account?</span>
+                <span class="create-account-text">Don't have an account?</span>
                 <a href="./signup" class="create-account-btn">
                     Create Account
                     <i class="bi bi-arrow-right ms-1"></i>
